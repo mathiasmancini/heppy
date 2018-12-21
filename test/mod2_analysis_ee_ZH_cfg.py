@@ -41,7 +41,7 @@ from EventStore import EventStore as Events
 from heppy.framework.event import Event
 # comment the following line to see all the collections stored in the event 
 # if collection is listed then print loop.event.papasevent will include the collections
-Event.print_patterns=['muons*','leptons*','rec_particles', 'gen_particles_stable', 'recoil*', 'collections']
+Event.print_patterns=['zeds*', 'higgs*', 'rec_particles', 'gen_particles_stable', 'recoil*', 'collections']
 
 # definition of the collider
 # help(Collider) for more information
@@ -83,63 +83,25 @@ from heppy.test.papas_cfg import papasdisplaycompare as display
 # we could use two different instances for the Selector module
 # to get separate collections of electrons and muons
 # help(Selector) for more information
-#from heppy.analyzers.Selector import Selector
-#leptons_true = cfg.Analyzer(
-#    Selector,
-#    'sel_leptons',
-#    output = 'leptons_true',
-#    input_objects = 'rec_particles',
-#    filter_func = lambda ptc: ptc.e()>10. and abs(ptc.pdgid()) in [11, 13]
-#)
-
-
 from heppy.analyzers.Selector import Selector
-electrons_true = cfg.Analyzer(
+leptons_true = cfg.Analyzer(
     Selector,
-    'sel_electrons',
-    output = 'electrons_true',
+    'sel_leptons',
+    output = 'leptons_true',
     input_objects = 'rec_particles',
-    filter_func = lambda ptc: ptc.e()>10. and abs(ptc.pdgid()) == 11
+    filter_func = lambda ptc: ptc.e()>10. and abs(ptc.pdgid()) in [11, 13]
 )
-
-#from heppy.analyzers.Selector import Selector
-muons_true = cfg.Analyzer(
-    Selector,
-    'sel_muons',
-    output = 'muons_true',
-    input_objects = 'rec_particles',
-    filter_func = lambda ptc: ptc.e()>10. and abs(ptc.pdgid()) == 13
-)
-
-
-
-
 
 # Compute lepton isolation w/r other particles in the event.
 # help(IsolationAnalyzer) for more information
 from heppy.analyzers.IsolationAnalyzer import IsolationAnalyzer
 from heppy.particles.isolation import EtaPhiCircle
-#iso_leptons = cfg.Analyzer(
-#    IsolationAnalyzer,
-#    candidates = 'leptons_true',
-#    particles = 'rec_particles',
-#    iso_area = EtaPhiCircle(0.4)
-#)
-
-iso_electrons = cfg.Analyzer(
+iso_leptons = cfg.Analyzer(
     IsolationAnalyzer,
-    candidates = 'electrons_true',
+    candidates = 'leptons_true',
     particles = 'rec_particles',
     iso_area = EtaPhiCircle(0.4)
 )
-
-iso_muons = cfg.Analyzer(
-    IsolationAnalyzer,
-    candidates = 'muons_true',
-    particles = 'rec_particles',
-    iso_area = EtaPhiCircle(0.4)
-)
-
 
 # Select isolated leptons with a Selector
 # one can pass a function like this one to the filter:
@@ -148,29 +110,11 @@ def relative_isolation(lepton):
     sumpt /= lepton.pt()
     return sumpt
 # ... or use a lambda statement as done below. 
-#sel_iso_leptons = cfg.Analyzer(
-#    Selector,
-#    'sel_iso_leptons',
-#    output = 'sel_iso_leptons',
-#    input_objects = 'leptons_true',
-    # filter_func = relative_isolation
-#    filter_func = lambda lep : lep.iso.sumpt/lep.pt()<0.3 # fairly loose
-#)
-
-sel_iso_electrons = cfg.Analyzer(
+sel_iso_leptons = cfg.Analyzer(
     Selector,
-    'sel_iso_electrons',
-    output = 'sel_iso_electrons',
-    input_objects = 'electrons_true',
-    # filter_func = relative_isolation
-    filter_func = lambda lep : lep.iso.sumpt/lep.pt()<0.3 # fairly loose
-)
-
-sel_iso_muons = cfg.Analyzer(
-    Selector,
-    'sel_iso_muons',
-    output = 'sel_iso_muons',
-    input_objects = 'muons_true',
+    'sel_iso_leptons',
+    output = 'sel_iso_leptons',
+    input_objects = 'leptons_true',
     # filter_func = relative_isolation
     filter_func = lambda lep : lep.iso.sumpt/lep.pt()<0.3 # fairly loose
 )
@@ -178,25 +122,31 @@ sel_iso_muons = cfg.Analyzer(
 # Building Zeds
 # help(ResonanceBuilder) for more information
 from heppy.analyzers.ResonanceBuilder import ResonanceBuilder
-#zeds = cfg.Analyzer(
-#    ResonanceBuilder,
-#    output = 'zeds',
-#    leg_collection = 'sel_iso_leptons',
-#    pdgid = 23
-#)
+zeds = cfg.Analyzer(
+    ResonanceBuilder,
+    output = 'zeds',
+    leg_collection = 'sel_iso_leptons',
+    pdgid = 23
+)
+
+from heppy.analyzers.ResonanceLegExtractor import ResonanceLegExtractor
+leg_extractor = cfg.Analyzer(
+    ResonanceLegExtractor,
+    resonances = 'zeds'
+)
 
 # Computing the recoil p4 (here, p_initial - p_zed)
 # help(RecoilBuilder) for more information
 sqrts = Collider.SQRTS 
 
 from heppy.analyzers.RecoilBuilder import RecoilBuilder
-#recoil = cfg.Analyzer(
-#    RecoilBuilder,
-#    instance_label = 'recoil',
-#    output = 'recoil',
-#    sqrts = sqrts,
-#    to_remove = 'zeds_legs'
-#) 
+recoil = cfg.Analyzer(
+    RecoilBuilder,
+    instance_label = 'recoil',
+    output = 'recoil',
+    sqrts = sqrts,
+    to_remove = 'zeds_legs'
+) 
 
 missing_energy = cfg.Analyzer(
     RecoilBuilder,
@@ -209,33 +159,33 @@ missing_energy = cfg.Analyzer(
 # Creating a list of particles excluding the decay products of the best zed.
 # help(Masker) for more information
 from heppy.analyzers.Masker import Masker
-#particles_not_zed = cfg.Analyzer(
-#    Masker,
-#    output = 'particles_not_zed',
-#    input = 'rec_particles',
-#    mask = 'zeds_legs',
-#)
+particles_not_zed = cfg.Analyzer(
+    Masker,
+    output = 'particles_not_zed',
+    input = 'rec_particles',
+    mask = 'zeds_legs',
+)
 
 # Make jets from the particles not used to build the best zed.
 # Here the event is forced into 2 jets to target ZH, H->b bbar)
 # help(JetClusterizer) for more information
 from heppy.analyzers.fcc.JetClusterizer import JetClusterizer
-#jets = cfg.Analyzer(
-#    JetClusterizer,
-#    output = 'jets',
-#    particles = 'particles_not_zed',
-#    fastjet_args = dict( njets = 2)  
-#)
+jets = cfg.Analyzer(
+    JetClusterizer,
+    output = 'jets',
+    particles = 'particles_not_zed',
+    fastjet_args = dict( njets = 2)  
+)
 
 #TODO add b tagging, gen jets, gen jet matching
 
 # Build Higgs candidates from pairs of jets.
-#higgses = cfg.Analyzer(
-#    ResonanceBuilder,
-#    output = 'higgses',
-#    leg_collection = 'jets',
-#    pdgid = 25
-#)
+higgses = cfg.Analyzer(
+    ResonanceBuilder,
+    output = 'higgses',
+    leg_collection = 'jets',
+    pdgid = 25
+)
 
 
 # Just a basic analysis-specific event Selection module.
@@ -259,7 +209,7 @@ selection = cfg.Analyzer(
 # Analysis-specific ntuple producer
 # please have a look at the code of the ZHTreeProducer class,
 # in heppy/analyzers/examples/zh/ZHTreeProducer.py
-from heppy.analyzers.examples.zh.ZHTreeProducer import ZHTreeProducer
+from heppy.analyzers.examples.zh.mod_ZHTreeProducer import ZHTreeProducer
 tree = cfg.Analyzer(
     ZHTreeProducer,
     #zeds = 'zeds',
@@ -277,17 +227,15 @@ sequence = cfg.Sequence(
     source,
     pdebug,
     papas_sequence,
-    electrons_true,
-    muons_true,
-    iso_electrons,
-    iso_muons,
-    sel_iso_electrons,
-    sel_iso_muons,
+    leptons_true,
+    iso_leptons,
+    sel_iso_leptons,
     #zeds,
-    #recoil,
+    leg_extractor, 
+    recoil,
     missing_energy,
-    #particles_not_zed,
-    #jets,
+    particles_not_zed,
+    jets,
     #higgses,
     selection, 
     tree,
