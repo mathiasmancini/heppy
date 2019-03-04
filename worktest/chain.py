@@ -10,15 +10,15 @@ histojetdeltaphi = ROOT.TH1D("histojetdeltaphi","histojetdeltaphi",100,-3.1415,3
 #creer chain object
 ch = ROOT.TChain("events","events") # de naam van de tree is belangrijk! Dat is hoe root die in the file vindt!
 
-# voeg de files toe
-ch.Add("tree.root")
+# voeg de files toe (meerdere .root files!) met een abs path to file
+test_directory = "/user/mmancini/FCCee/heppy/worktest/small_samples/test2/ee_ttbar/MySimpleTreeProducer.MySimpleTreeProducer_1/"
+ch.Add(test_directory+"tree.root")
 
 # print wat er in die tree zit
 ch.Print()
 
-
 # direct iets plotten:
-ch.Draw("misenergy_pt")
+ch.Draw("lep2_pt")
 
 # of nog interessanter: code schrijven die ingewikkelder dingen doet, per event
 nevents=ch.GetEntries()

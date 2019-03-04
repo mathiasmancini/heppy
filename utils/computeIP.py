@@ -155,7 +155,7 @@ def compute_IP(helix, primary_vertex, jet_direction):
 
     helix.min_approach = minimize_scalar(pr_vertex_track_distance,
                                         bracket = None,
-                                        bounds = [-5e-9, 5e-9],
+                                        bounds = [-1e-11, 1e-11],
                                         args=(),
                                         method='bounded',
                                         tol=None,
@@ -166,7 +166,6 @@ def compute_IP(helix, primary_vertex, jet_direction):
     helix.ip_proj_jet_axis = helix.jet_direction.Dot( helix.vector_impact_parameter )
     helix.sign_impact_parameter = sign( helix.ip_proj_jet_axis )
     helix.impact_parameter = helix.vector_impact_parameter.Mag() * helix.sign_impact_parameter
-    return helix.impact_parameter
 
 
 from ROOT import TCanvas, TGraph, TLine

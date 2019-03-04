@@ -26,7 +26,8 @@ logging.basicConfig(level=logging.WARNING)
 import heppy.statistics.rrandom as random
 # do not forget to comment out the following line if you want to produce and combine
 # several samples of events 
-random.seed(0xdeadbeef)
+#random.seed(0xdeadbeef)
+# NOTE: REMOVED SET SEED FOR NOW, FOR REPRODUCIBILTY UNCOMMENT LINE ABOVE
 
 # loading the FCC event data model library to decode
 # the format of the events in the input file
@@ -168,9 +169,6 @@ sel_iso_electrons = cfg.Analyzer(
                                  # filter_func = relative_isolation
                                  filter_func = lambda ptc: abs(ptc.pdgid()) in [11]
                                  )
-
-
-
 
 
 sqrts = Collider.SQRTS
